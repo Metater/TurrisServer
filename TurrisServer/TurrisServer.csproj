@@ -1,0 +1,18 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net6.0</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LiteNetLib" Version="0.9.5" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="BitManipulation">
+      <HintPath>E:\Projects\Unity\Turris\Assets\BitManipulation\netstandard2.0\BitManipulation.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
