@@ -14,7 +14,7 @@ namespace TurrisServer
         {
             listener = new TurrisServerListener(this);
             server = new NetManager(listener);
-            server.Start(7777);
+            server.Start(11000);
         }
     }
 }
