@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard2.0</TargetFramework>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+	<OutputPath>E:\Projects\Unity\Turris\Assets\TurrisShared\</OutputPath>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="BitManipulation">
+      <HintPath>E:\Projects\Unity\Turris\Assets\BitManipulation\netstandard2.0\BitManipulation.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
