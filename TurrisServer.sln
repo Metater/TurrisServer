@@ -5,7 +5,9 @@ VisualStudioVersion = 17.0.31717.71
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurrisServer", "TurrisServer\TurrisServer.csproj", "{3ECB006C-8ACC-4D13-8C8F-C379E0C69845}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurrisShared", "TurrisShared\TurrisShared.csproj", "{0DACA974-50E3-4FD8-809D-E4103289506D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "TurrisShared", "TurrisShared\TurrisShared.csproj", "{0DACA974-50E3-4FD8-809D-E4103289506D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TurrisAuth", "TurrisAuth\TurrisAuth.csproj", "{46DFA1AC-2D13-4DA9-B22E-96E755F71821}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -21,6 +23,10 @@ Global
 		{0DACA974-50E3-4FD8-809D-E4103289506D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0DACA974-50E3-4FD8-809D-E4103289506D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0DACA974-50E3-4FD8-809D-E4103289506D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{46DFA1AC-2D13-4DA9-B22E-96E755F71821}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{46DFA1AC-2D13-4DA9-B22E-96E755F71821}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{46DFA1AC-2D13-4DA9-B22E-96E755F71821}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{46DFA1AC-2D13-4DA9-B22E-96E755F71821}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
