@@ -1,12 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿namespace TurrisServer;
 
-namespace TurrisServer
+public class TurrisGame
 {
-    internal class TurrisGame
-    {
-    }
+
 }
