@@ -2,19 +2,18 @@
 
 public class TurrisDispatcher
 {
-    private Channel<Action>? channel;
+    private Channel<Action> channel;
 
     public readonly string serverKey;
+
+    public readonly Task task;
 
     public TurrisDispatcher(string serverKey)
     {
         this.serverKey = serverKey;
-    }
 
-    public Task Start()
-    {
         channel = Channel.CreateUnbounded<Action>(new UnboundedChannelOptions() { SingleReader = true });
-        return Task.Run(async () =>
+        task = Task.Run(async () =>
         {
             while (await channel.Reader.WaitToReadAsync())
             {

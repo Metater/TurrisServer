@@ -9,7 +9,6 @@ public class Program
         Console.WriteLine("Hello, World!");
         string serverKey = File.ReadAllText($"{Directory.GetCurrentDirectory()}/serverKey.secret");
         TurrisDispatcher dispatcher = new(serverKey);
-        dispatcher.Start();
         int port = 12733;
         for (int i = 0; i < 10; i++)
         {

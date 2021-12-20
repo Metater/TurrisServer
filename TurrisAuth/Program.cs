@@ -3,6 +3,9 @@ var builder = WebApplication.CreateBuilder();
 string serverKey = args[0];
 string clientKey = args[1];
 
+// rename turris server to turris node
+
+
 object serversLock = new();
 List<TurrisServer> servers = new();
 

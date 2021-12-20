@@ -5,7 +5,8 @@ public class TurrisServer
     public readonly Guid guid;
     public readonly string ep;
 
-    private readonly object 
+    public int loadFactor = 0;
+    public int players
 
     public TurrisServer(Guid guid, string ep)
     {
