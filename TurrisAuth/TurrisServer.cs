@@ -2,13 +2,15 @@
 
 public class TurrisServer
 {
-    public readonly Guid guid;
+    public readonly string guid;
     public readonly string ep;
 
     public int loadFactor = 0;
-    public int players
+    public int players = 0;
 
-    public TurrisServer(Guid guid, string ep)
+    public List<string> games = new();
+
+    public TurrisServer(string guid, string ep)
     {
         this.guid = guid;
         this.ep = ep;
