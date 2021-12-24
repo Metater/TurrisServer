@@ -3,6 +3,9 @@ var builder = WebApplication.CreateBuilder();
 string serverKey = args[0];
 string clientKey = args[1];
 
+string gameCodesPath = Directory.GetCurrentDirectory() + "/gameCodes.turris";
+string accountsPath = Directory.GetCurrentDirectory() + "/accounts.turris";
+
 object gameCodesLock = new();
 List<string> gameCodes = new();
 
@@ -18,6 +21,8 @@ object authLock = new();
 List<TurrisAuthEntry> auth = new();
 // username | authToken, auth
 ConcurrentDictionary<string, TurrisAuthEntry> authCache = new();
+
+await Load();
 
 bool save = false;
 
@@ -47,7 +52,7 @@ app.MapGet("/createaccount", async ctx =>
 
     // verify password
     string password = GetQuery(ctx, "password");
-    if (password.Length < 8)
+    if (password.Length < 6)
     {
         AddGameCode();
         await ctx.Response.WriteAsync("400\nPasswordTooShort");
@@ -97,34 +102,49 @@ app.MapGet("/deleteaccount", async ctx =>
     if (!await Auth(ctx, serverKey)) return;
     if (!await CheckQuery(ctx, "username")) return;
 
+    string username = GetQuery(ctx, "username");
     bool deleted = false;
     lock (accountsLock)
     {
-        deleted = accounts.Remove(GetQuery(ctx, "username"));
+        deleted = accounts.Remove(username);
     }
-    if (deleted) save = true;
+    if (deleted)
+    {
+        if (authCache.TryRemove(username, out TurrisAuthEntry? authEntry))
+        {
+            authCache.TryRemove(authEntry.authToken, out _);
+            lock (authLock)
+            {
+                auth.Remove(authEntry);
+            }
+        }
+        save = true;
+    }
 
     await ctx.Response.WriteAsync("200");
 });
 
-
-
-// auth
 app.MapGet("/auth", async ctx =>
 {
-    // input:
-    // client key
-    // username
-    // password
     if (!await Auth(ctx, clientKey)) return;
     if (!await CheckQuery(ctx, "username")) return;
     if (!await CheckQuery(ctx, "password")) return;
+
+    string username = GetQuery(ctx, "username");
+    if (authCache.TryRemove(username, out TurrisAuthEntry? staleAuthEntry))
+    {
+        authCache.TryRemove(staleAuthEntry.authToken, out _);
+        lock (authLock)
+        {
+            auth.Remove(staleAuthEntry);
+        }
+    }
 
     string? passwordHash;
     bool usernameValid;
     lock (accountsLock)
     {
-        usernameValid = accounts.TryGetValue(GetQuery(ctx, "username"), out passwordHash);
+        usernameValid = accounts.TryGetValue(username, out passwordHash);
     }
     if (!usernameValid)
     {
@@ -140,21 +160,41 @@ app.MapGet("/auth", async ctx =>
     }
 
     string authToken = Guid.NewGuid().ToString();
-
+    TurrisAuthEntry authEntry = new(username, authToken, DateTime.Now.AddHours(12));
+    lock (authLock)
+    {
+        auth.Add(authEntry);
+    }
+    authCache.TryAdd(username, authEntry);
+    authCache.TryAdd(authToken, authEntry);
     await ctx.Response.WriteAsync($"200\nAuthToken:{authToken}");
 });
 
 
-// auth valid
-app.MapGet("/authvalid", async ctx =>
+app.MapGet("/intentvalid", async ctx =>
 {
-    // input:
-    // server key
-    // auth token
+    if (!await Auth(ctx, serverKey)) return;
+    if (!await CheckQuery(ctx, "authToken")) return;
+    if (!await CheckQuery(ctx, "serverId")) return;
+    if (!await CheckQuery(ctx, "serverIntentType")) return;
 
-    // output:
-    // result code
-    // username
+    if (!TryGetAuthToken(ctx, out TurrisAuthEntry? authEntry))
+    {
+        await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
+        return;
+    }
+    if (authEntry!.serverIntentExpiration > DateTime.Now || authEntry.serverIntent != GetQuery(ctx, "serverId") || !int.TryParse(GetQuery(ctx, "serverIntentType"), out int serverIntentType) || serverIntentType != ((int)authEntry.serverIntentType))
+    {
+        authEntry.serverIntent = "";
+        authEntry.serverIntentType = ServerIntentType.None;
+        authEntry.serverIntentExpiration = DateTime.Now;
+        await ctx.Response.WriteAsync("400\nServerIntentInvalid");
+        return;
+    }
+    authEntry.serverIntent = "";
+    authEntry.serverIntentType = ServerIntentType.None;
+    authEntry.serverIntentExpiration = DateTime.Now;
+    await ctx.Response.WriteAsync($"200\nUsername:{authEntry.username}");
 });
 
 
@@ -162,7 +202,6 @@ app.MapGet("/authvalid", async ctx =>
 
 
 
-// create game code
 app.MapGet("/creategamecode", async ctx =>
 {
     if (!await Auth(ctx, serverKey)) return;
@@ -175,20 +214,54 @@ app.MapGet("/creategamecode", async ctx =>
     save = true;
 });
 
-// output:
-// game code
-
-// list game codes
+app.MapGet("/listgamecodes", async ctx =>
+{
+    if (!await Auth(ctx, serverKey)) return;
+    string gameCodesList = "";
+    lock (gameCodesLock)
+    {
+        gameCodesList = string.Join(',', gameCodesList);
+    }
+    await ctx.Response.WriteAsync($"200\nGameCodes:{gameCodesList}");
+});
 
 
 app.MapGet("/creategame", async ctx =>
 {
     if (!await Auth(ctx, clientKey)) return;
+    if (!await CheckQuery(ctx, "authToken")) return;
 
+    if (!TryGetAuthToken(ctx, out TurrisAuthEntry? authEntry))
+    {
+        await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
+        return;
+    }
+
+    int lowestLoadFactor = int.MaxValue;
+    TurrisServer? assigned = null;
     lock (serversLock)
     {
-
+        foreach (TurrisServer server in servers)
+        {
+            if (server.loadFactor < lowestLoadFactor)
+            {
+                assigned = server;
+                lowestLoadFactor = server.loadFactor;
+            }
+        }
     }
+
+    if (assigned is null)
+    {
+        await ctx.Response.WriteAsync("400\nNoServerAssigned");
+        return;
+    }
+
+    authEntry!.serverIntent = assigned.guid;
+    authEntry.serverIntentType = ServerIntentType.CreateGame;
+    authEntry.serverIntentExpiration = DateTime.Now.AddSeconds(15);
+
+    await ctx.Response.WriteAsync($"200\nEndpoint:{assigned.ep}");
 });
 
 app.MapGet("/joingame", async ctx =>
@@ -202,6 +275,10 @@ app.MapGet("/joingame", async ctx =>
 app.MapPost("/update", async ctx =>
 {
     if (!await Auth(ctx, serverKey)) return;
+
+    // new game join code
+
+    // server id
 });
 
 app.MapGet("/poll", async ctx =>
@@ -238,6 +315,11 @@ async Task<bool> CheckQuery(HttpContext ctx, string query)
     return has;
 }
 
+bool TryGetAuthToken(HttpContext ctx, out TurrisAuthEntry? authEntry)
+{
+    return authCache.TryGetValue(GetQuery(ctx, "authToken"), out authEntry);
+}
+
 string GetQuery(HttpContext ctx, string query)
 {
     return ctx.Request.Query[query];
@@ -250,19 +332,45 @@ string Hash(string str)
     return Convert.ToBase64String(result);
 }
 
-void Save()
+async Task Load()
+{
+    if (File.Exists(gameCodesPath))
+    {
+        gameCodes = new(await File.ReadAllLinesAsync(gameCodesPath));
+    }
+    if (File.Exists(accountsPath))
+    {
+        string[] accountLines = await File.ReadAllLinesAsync(accountsPath);
+        foreach (string accountLine in accountLines)
+        {
+            string[] account = accountLine.Split(':');
+            accounts.Add(account[0], account[1]);
+        }
+    }
+}
+
+async Task Save()
 {
     if (!save) return;
+    Task[] savingFiles = new Task[2];
+    List<string> gameCodesCopy;
     lock (gameCodesLock)
     {
-
+        gameCodesCopy = new(gameCodes);
     }
+    savingFiles[0] = File.WriteAllLinesAsync(gameCodesPath, gameCodesCopy);
+    List<KeyValuePair<string, string>> accountsCopy;
     lock (accountsLock)
     {
-
+        accountsCopy = new(accounts);
     }
-    // game codes
-    // accounts: username, pw hash
+    List<string> accountLines = new();
+    foreach ((string username, string passwordHash) in accountsCopy)
+    {
+        accountLines.Add(username + ":" + passwordHash);
+    }
+    savingFiles[1] = File.WriteAllLinesAsync(accountsPath, accountLines);
+    await Task.WhenAll(savingFiles);
 }
 
 List<Task> tasks = new();
@@ -270,9 +378,25 @@ tasks.Add(Task.Run(async () =>
 {
     while (true)
     {
-        Save();
-        await Task.Delay(10000);
+        for (int i = 0; i < 100; i++)
+        {
+            await Task.Delay(10000);
+            await Save();
+        }
+        lock (authLock)
+        {
+            DateTime now = DateTime.Now;
+            List<TurrisAuthEntry> expired = auth.FindAll(e => now >= e.expiration);
+            foreach (TurrisAuthEntry authEntry in expired)
+            {
+                auth.Remove(authEntry);
+                authCache.TryRemove(authEntry.username, out _);
+                authCache.TryRemove(authEntry.authToken, out _);
+            }
+        }
     }
 }));
 tasks.Add(app.RunAsync());
 await Task.WhenAll(tasks);
+save = true;
+await Save();
