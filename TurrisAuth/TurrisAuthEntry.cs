@@ -1,6 +1,6 @@
 ﻿namespace TurrisAuth;
 
-public class TurrisAuthEntry
+public class TurrisPlayer
 {
     public readonly string username;
     public readonly string authToken;
@@ -9,8 +9,11 @@ public class TurrisAuthEntry
     public string serverIntent = "";
     public ServerIntentType serverIntentType = ServerIntentType.None;
     public DateTime serverIntentExpiration = DateTime.Now;
+    
+    public bool inGame = false;
+    public string game = "";
 
-    public TurrisAuthEntry(string username, string authToken, DateTime expiration)
+    public TurrisPlayer(string username, string authToken, DateTime expiration)
     {
         this.username = username;
         this.authToken = authToken;

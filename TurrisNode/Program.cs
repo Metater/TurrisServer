@@ -9,8 +9,8 @@ public class Program
         Console.WriteLine("Hello, World!");
         string serverKey = File.ReadAllText($"{Directory.GetCurrentDirectory()}/serverKey.secret");
         TurrisDispatcher dispatcher = new(serverKey);
-        int port = 12733;
-        for (int i = 0; i < 10; i++)
+        int port = 16524;
+        for (int i = 0; i < 4; i++)
         {
             TurrisServer turrisServer = new(dispatcher, 1, port++);
             Thread thread = new(() =>
