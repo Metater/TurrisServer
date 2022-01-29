@@ -425,13 +425,12 @@ tasks.Add(Task.Run(async () =>
         lock (authLock)
         {
             DateTime now = DateTime.Now;
-            List<TurrisPlayer> expired = players.FindAll(e => now >= e.expiration);
-            foreach (TurrisPlayer authEntry in expired)
+            players.FindAll(e => now >= e.expiration).ForEach(expiredPlayer =>
             {
-                players.Remove(authEntry);
-                playerCache.TryRemove(authEntry.username, out _);
-                playerCache.TryRemove(authEntry.authToken, out _);
-            }
+                players.Remove(expiredPlayer);
+                playerCache.TryRemove(expiredPlayer.username, out _);
+                playerCache.TryRemove(expiredPlayer.authToken, out _);
+            });
         }
     }
 }));
