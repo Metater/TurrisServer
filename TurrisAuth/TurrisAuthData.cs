@@ -38,26 +38,26 @@ public class TurrisAuthData
     }
 
     // use tupes in auth and join code
-    public async Task<(bool)> AuthTokenValid()
+    public async Task<(bool valid, TurrisPlayer? player)> AuthTokenValid()
     {
-        if (!await TurrisUtils.QueryValid(ctx, "authToken")) return false;
-        if (!PlayerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "authToken"), out _))
+        if (!await TurrisUtils.QueryValid(ctx, "authToken")) return (false, null);
+        if (!PlayerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "authToken"), out TurrisPlayer? player))
         {
             await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
-            return false;
+            return (false, null);
         }
-        return true;
+        return (true, player);
     }
 
-    public async Task<bool> JoinCodeValid()
+    public async Task<(bool valid, TurrisServer? server)> JoinCodeValid()
     {
-        if (!await TurrisUtils.QueryValid(ctx, "joinCode")) return false;
-        if (!ServerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "joinCode"), out _))
+        if (!await TurrisUtils.QueryValid(ctx, "joinCode")) return (false, null);
+        if (!ServerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "joinCode"), out TurrisServer? server))
         {
             await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
-            return false;
+            return (false, null);
         }
-        return true;
+        return (true, server);
     }
 
     public void RemoveExpiredPlayers()
