@@ -37,7 +37,6 @@ public class TurrisAuthData
         AccountsPath = Directory.GetCurrentDirectory() + "/accounts.turris";
     }
 
-    // use tupes in auth and join code
     public async Task<(bool valid, TurrisPlayer? player)> AuthTokenValid()
     {
         if (!await TurrisUtils.QueryValid(ctx, "authToken")) return (false, null);
