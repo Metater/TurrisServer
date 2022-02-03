@@ -9,7 +9,7 @@ public class TurrisValidation
         this.authData = authData;
     }
 
-    public async Task<(bool valid, TurrisPlayer? player)> ValidateAuthToken()
+    public async Task<(bool valid, TurrisPlayer? player)> ValidateAuthToken(HttpContext ctx)
     {
         if (!await ctx.QueryExists("authToken")) return (false, null);
         if (!authData.PlayerCache.TryGetValue(ctx.GetQuery("authToken"), out TurrisPlayer? player))
@@ -20,7 +20,7 @@ public class TurrisValidation
         return (true, player);
     }
 
-    public async Task<(bool valid, TurrisServer? server)> ValidateJoinCode()
+    public async Task<(bool valid, TurrisServer? server)> ValidateJoinCode(HttpContext ctx)
     {
         if (!await ctx.QueryExists("joinCode")) return (false, null);
         if (!authData.ServerCache.TryGetValue(ctx.GetQuery("joinCode"), out TurrisServer? server))
@@ -31,10 +31,13 @@ public class TurrisValidation
         return (true, server);
     }
 
-    public async Task<(bool valid, string gameCode)> ValidateGameCode()
+    public async Task<(bool valid, string gameCode)> ValidateGameCode(HttpContext ctx)
     {
-        
+        if(!await ctx.ctx.QueryExists("gameCode")) return (false, "");
+        string gameCode = ctx.GetQuery("gameCode");
     }
+
+
 
     // move the rest of validation logic here
 }
