@@ -61,14 +61,6 @@ app.MapGet("/createaccount", async ctx =>
         return;
     }
 
-    void AddGameCode()
-    {
-        lock (gameCodesLock)
-        {
-            gameCodes.Add(gameCode);
-        }
-    }
-
     saveGameCodes = true;
     saveAccounts = true;
 

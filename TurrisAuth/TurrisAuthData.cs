@@ -37,6 +37,14 @@ public class TurrisAuthData
         AccountsPath = Directory.GetCurrentDirectory() + "/accounts.turris";
     }
 
+    public void AddGameCode(string gameCode)
+    {
+        lock (gameCodesLock)
+        {
+            gameCodes.Add(gameCode);
+        }
+    }
+
     public void RemoveExpiredPlayers()
     {
         lock (playersLock)

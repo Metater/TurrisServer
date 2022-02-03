@@ -31,5 +31,10 @@ public class TurrisValidation
         return (true, server);
     }
 
+    public async Task<(bool valid, string gameCode)> ValidateGameCode()
+    {
+        
+    }
+
     // move the rest of validation logic here
 }
