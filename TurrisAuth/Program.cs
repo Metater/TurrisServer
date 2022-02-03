@@ -1,28 +1,5 @@
 var builder = WebApplication.CreateBuilder();
 
-string serverKey = File.ReadAllText(Directory.GetCurrentDirectory() + "/serverKey.secret");
-string clientKey = File.ReadAllText(Directory.GetCurrentDirectory() + "/clientKey.secret");
-
-string gameCodesPath = Directory.GetCurrentDirectory() + "/gameCodes.turris";
-string accountsPath = Directory.GetCurrentDirectory() + "/accounts.turris";
-
-object gameCodesLock = new();
-List<string> gameCodes = new();
-bool saveGameCodes = false;
-
-object accountsLock = new();
-Dictionary<string, string> accounts = new();
-bool saveAccounts = false;
-
-object serversLock = new();
-List<TurrisServer> servers = new();
-// server guid | join code, server
-ConcurrentDictionary<string, TurrisServer> serverCache = new();
-
-object authLock = new();
-List<TurrisPlayer> players = new();
-// username | authToken, player
-ConcurrentDictionary<string, TurrisPlayer> playerCache = new();
 
 await Load();
 
