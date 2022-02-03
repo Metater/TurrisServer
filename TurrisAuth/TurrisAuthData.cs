@@ -37,28 +37,6 @@ public class TurrisAuthData
         AccountsPath = Directory.GetCurrentDirectory() + "/accounts.turris";
     }
 
-    public async Task<(bool valid, TurrisPlayer? player)> ValidateAuthToken()
-    {
-        if (!await TurrisUtils.QueryExists(ctx, "authToken")) return (false, null);
-        if (!PlayerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "authToken"), out TurrisPlayer? player))
-        {
-            await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
-            return (false, null);
-        }
-        return (true, player);
-    }
-
-    public async Task<(bool valid, TurrisServer? server)> ValidateJoinCode()
-    {
-        if (!await TurrisUtils.QueryValid(ctx, "joinCode")) return (false, null);
-        if (!ServerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "joinCode"), out TurrisServer? server))
-        {
-            await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
-            return (false, null);
-        }
-        return (true, server);
-    }
-
     public void RemoveExpiredPlayers()
     {
         lock (playersLock)
