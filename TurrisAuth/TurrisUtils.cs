@@ -2,10 +2,10 @@ namespace TurrisAuth;
 
 public static class TurrisUtils
 {
-    public static async Task<bool> KeyValid(HttpContext ctx, string key)
+    public static async Task<bool> ValidateKey(this HttpContext ctx, Func<string, bool> keyValid)
     {
-        if (!await QueryValid(ctx, "key")) return false;
-        if (GetQuery(ctx, "key") != key)
+        if (!await ctx.QueryExists("key")) return false;
+        if (!keyValid(GetQuery(ctx, "key")))
         {
             await ctx.Response.WriteAsync("400\nInvalidKey");
             return false;
@@ -13,14 +13,14 @@ public static class TurrisUtils
         return true;
     }
 
-    public static async Task<bool> QueryValid(HttpContext ctx, string query)
+    public static async Task<bool> QueryExists(this HttpContext ctx, string query)
     {
-        bool hasQuery = ctx.Request.Query.ContainsKey(query);
-        if (!hasQuery) await ctx.Response.WriteAsync($"400\nMissingQuery:{query}");
-        return hasQuery;
+        bool queryExists = ctx.Request.Query.ContainsKey(query);
+        if (!queryExists) await ctx.Response.WriteAsync($"400\nMissingQuery:{query}");
+        return queryExists;
     }
 
-    public static string GetQuery(HttpContext ctx, string query)
+    public static string GetQuery(this HttpContext ctx, string query)
     {
         return ctx.Request.Query[query];
     }

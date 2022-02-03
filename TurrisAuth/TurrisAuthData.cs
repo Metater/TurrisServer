@@ -16,13 +16,13 @@ public class TurrisAuthData
     // <username, passwordHash>
     public Dictionary<string, string> Accounts { get; private set; } = new();
 
-    public object serverLock = new();
+    public object serversLock = new();
     // <server>
     public List<TurrisServer> Servers { get; private set; } = new();
     // <serverGuid|joinCode, server>
     public ConcurrentDictionary<string, TurrisServer> ServerCache { get; private set; } = new();
 
-    public object authLock = new();
+    public object playersLock = new();
     // <player>
     public List<TurrisPlayer> Players { get; private set; } = new();
     // <username|authToken, player>
@@ -37,9 +37,9 @@ public class TurrisAuthData
         AccountsPath = Directory.GetCurrentDirectory() + "/accounts.turris";
     }
 
-    public async Task<(bool valid, TurrisPlayer? player)> AuthTokenValid()
+    public async Task<(bool valid, TurrisPlayer? player)> ValidateAuthToken()
     {
-        if (!await TurrisUtils.QueryValid(ctx, "authToken")) return (false, null);
+        if (!await TurrisUtils.QueryExists(ctx, "authToken")) return (false, null);
         if (!PlayerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "authToken"), out TurrisPlayer? player))
         {
             await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
@@ -48,7 +48,7 @@ public class TurrisAuthData
         return (true, player);
     }
 
-    public async Task<(bool valid, TurrisServer? server)> JoinCodeValid()
+    public async Task<(bool valid, TurrisServer? server)> ValidateJoinCode()
     {
         if (!await TurrisUtils.QueryValid(ctx, "joinCode")) return (false, null);
         if (!ServerCache.TryGetValue(TurrisUtils.GetQuery(ctx, "joinCode"), out TurrisServer? server))
@@ -61,7 +61,7 @@ public class TurrisAuthData
 
     public void RemoveExpiredPlayers()
     {
-        lock (authLock)
+        lock (playersLock)
         {
             DateTime now = DateTime.Now;
             Players.FindAll(player => now >= player.expiration).ForEach(expiredPlayer =>
@@ -71,6 +71,16 @@ public class TurrisAuthData
                 PlayerCache.TryRemove(expiredPlayer.authToken, out _);
             });
         }
+    }
+
+    public void QueueGameCodesSave()
+    {
+        queuedSaveGameCodes = true;
+    }
+
+    public void QueueAccountsSave()
+    {
+        queuedSaveAccounts = true;
     }
 
     public async Task ForceSave()
