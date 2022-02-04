@@ -1,0 +1,31 @@
+
+
+endpoint createaccount
+{
+    ensure query exists key
+    ensure query exists gameCode
+    ensure query exists username
+    ensure query exists password
+
+    ensure key is ClientKey
+
+    ensure password length >= 6
+    ensure password length <= 24
+
+    passwordHash = hash password
+
+    ensure Regex.IsMatch(username, @"^[a-zA-Z0-9_]+$")
+    ensure username length >= 1
+    ensure username length <= 16
+
+    lock gameCodesLock: ensure GameCodes removed gameCode
+
+    lock accountsLock: 
+        ensure Accounts not contains key username
+        else lock gameCodesLock: GameCodes add gameCode
+        Accounts add username, passwordHash
+        else lock gameCodesLock: GameCodes add gameCode
+
+    save GameCodes
+    save Accounts
+}
