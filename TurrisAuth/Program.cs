@@ -1,7 +1,8 @@
 var builder = WebApplication.CreateBuilder();
 
-
-await Load();
+TurrisAuthData authData = new();
+await authData.Load();
+TurrisValidation validation = new(authData);
 
 var app = builder.Build();
 
@@ -9,163 +10,104 @@ var app = builder.Build();
 
 app.MapGet("/createaccount", async ctx =>
 {
-    if (!await Auth(ctx, clientKey)) return;
-    if (!await CheckQuery(ctx, "gamecode")) return;
-    if (!await CheckQuery(ctx, "username")) return;
-    if (!await CheckQuery(ctx, "password")) return;
+    if (!await validation.AuthClient(ctx)) return;
 
-    // verify game code
-    string gameCode = GetQuery(ctx, "gamecode");
-    bool gameCodeValid;
-    lock (gameCodesLock)
+    (bool validGamecode, string gameCode) = await validation.GameCode(ctx);
+    if (!validGamecode) return;
+
+    (bool validPassword, string password) = await validation.Password(ctx);
+    if (!validPassword)
     {
-        gameCodeValid = gameCodes.Remove(gameCode);
-    }
-    if (!gameCodeValid)
-    {
-        await ctx.Response.WriteAsync("400\nInvalidGameCode");
+        authData.AddGameCode(gameCode);
         return;
     }
 
-    // verify password
-    string password = GetQuery(ctx, "password");
-    if (password.Length < 6)
-    {
-        AddGameCode();
-        await ctx.Response.WriteAsync("400\nPasswordTooShort");
-        return;
-    }
-    string passwordHash = Hash(password);
+    string passwordHash = TurrisUtils.Hash(password);
 
-    // verify username
-    string username = GetQuery(ctx, "username");
-    if (!Regex.IsMatch(username, @"^[a-zA-Z0-9_]+$") || username.Length > 16 || username.Length < 1)
+    (bool validUsername, string username) = await validation.Username(ctx);
+    if (!validUsername)
     {
-        AddGameCode();
-        await ctx.Response.WriteAsync("400\nUsernameInvalid");
+        authData.AddGameCode(gameCode);
         return;
     }
-    bool usernameUnique;
-    lock (accountsLock)
+    if (validation.UsernameExists(username))
     {
-        usernameUnique = !accounts.ContainsKey(username);
-        if (usernameUnique)
-        {
-            accounts.Add(username, passwordHash);
-        }
-    }
-    if (!usernameUnique)
-    {
-        AddGameCode();
         await ctx.Response.WriteAsync("400\nUsernameExists");
+        authData.AddGameCode(gameCode);
         return;
     }
+    authData.AddAccount(username, passwordHash);
 
-    saveGameCodes = true;
-    saveAccounts = true;
+    authData.QueueSave();
 
     await ctx.Response.WriteAsync("200");
 });
 
 app.MapGet("/deleteaccount", async ctx =>
 {
-    if (!await Auth(ctx, serverKey)) return;
-    if (!await CheckQuery(ctx, "username")) return;
+    if (!await validation.AuthClient(ctx)) return;
 
-    string username = GetQuery(ctx, "username");
-    bool deleted = false;
-    lock (accountsLock)
-    {
-        deleted = accounts.Remove(username);
-    }
-    if (deleted)
-    {
-        if (playerCache.TryRemove(username, out TurrisPlayer? authEntry))
-        {
-            playerCache.TryRemove(authEntry.authToken, out _);
-            lock (authLock)
-            {
-                players.Remove(authEntry);
-            }
-        }
-        saveAccounts = true;
-        await ctx.Response.WriteAsync("200");
-    }
-    else
-        await ctx.Response.WriteAsync("400\nUsernameNotFound");
-});
-
-app.MapGet("/auth", async ctx =>
-{
-    if (!await Auth(ctx, clientKey)) return;
-    if (!await CheckQuery(ctx, "username")) return;
-    if (!await CheckQuery(ctx, "password")) return;
-
-    string username = GetQuery(ctx, "username");
-    if (playerCache.TryRemove(username, out TurrisPlayer? staleAuthEntry))
-    {
-        playerCache.TryRemove(staleAuthEntry.authToken, out _);
-        lock (authLock)
-        {
-            players.Remove(staleAuthEntry);
-        }
-    }
-
-    string? passwordHash;
-    bool usernameExists;
-    lock (accountsLock)
-    {
-        usernameExists = accounts.TryGetValue(username, out passwordHash);
-    }
-    if (!usernameExists)
+    (bool validUsername, string username) = await validation.Username(ctx);
+    if (!validUsername) return;
+    if (!validation.UsernameExists(username))
     {
         await ctx.Response.WriteAsync("400\nUsernameNotFound");
         return;
     }
 
-    string providedPasswordHash = Hash(GetQuery(ctx, "password"));
-    if (providedPasswordHash != passwordHash!)
+    authData.RemoveAccount(username);
+
+    authData.QueueAccountsSave();
+    authData.RemovePlayer(username);
+
+    await ctx.Response.WriteAsync("200");
+});
+
+app.MapGet("/auth", async ctx =>
+{
+    if (!await validation.AuthClient(ctx)) return;
+
+    (bool validUsername, string username) = await validation.Username(ctx);
+    if (!validUsername) return;
+    if (!validation.UsernameExists(username))
+    {
+        await ctx.Response.WriteAsync("400\nUsernameNotFound");
+        return;
+    }
+
+    (bool validPassword, string password) = await validation.Password(ctx);
+    if (!validPassword) return;
+
+    string providedPasswordHash = TurrisUtils.Hash(password);
+
+    bool passwordInvalid = false;
+    if (authData.GetPasswordHash(username, out string? passwordHash))
+    {
+        passwordInvalid = providedPasswordHash != passwordHash!;
+    }
+    else
+        passwordInvalid = true;
+
+    if (passwordInvalid)
     {
         await ctx.Response.WriteAsync("400\nPasswordInvalid");
         return;
     }
 
+    authData.RemovePlayer(username);
+
     string authToken = Guid.NewGuid().ToString();
     TurrisPlayer authEntry = new(username, authToken, DateTime.Now.AddHours(12));
-    lock (authLock)
-    {
-        players.Add(authEntry);
-    }
-    playerCache.TryAdd(username, authEntry);
-    playerCache.TryAdd(authToken, authEntry);
+    authData.AddPlayer(authEntry);
     await ctx.Response.WriteAsync($"200\nAuthToken:{authToken}");
 });
 
 
 app.MapGet("/intentvalid", async ctx =>
 {
-    if (!await Auth(ctx, serverKey)) return;
-    if (!await CheckQuery(ctx, "authToken")) return;
-    if (!await CheckQuery(ctx, "serverId")) return;
-    if (!await CheckQuery(ctx, "serverIntentType")) return;
+    if (!await validation.AuthServer(ctx)) return;
 
-    if (!TryGetAuthToken(ctx, out TurrisPlayer? authEntry))
-    {
-        await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
-        return;
-    }
-    if (DateTime.Now >= authEntry!.serverIntentExpiration || authEntry.serverIntent != GetQuery(ctx, "serverId") || !int.TryParse(GetQuery(ctx, "serverIntentType"), out int serverIntentType) || serverIntentType != ((int)authEntry.serverIntentType))
-    {
-        authEntry.serverIntent = "";
-        authEntry.serverIntentType = ServerIntentType.None;
-        authEntry.serverIntentExpiration = DateTime.Now;
-        await ctx.Response.WriteAsync("400\nServerIntentInvalid");
-        return;
-    }
-    authEntry.serverIntent = "";
-    authEntry.serverIntentType = ServerIntentType.None;
-    authEntry.serverIntentExpiration = DateTime.Now;
-    await ctx.Response.WriteAsync($"200\nUsername:{authEntry.username}");
+    await validation.Intent(ctx);
 });
 
 

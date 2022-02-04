@@ -5,8 +5,10 @@ public class TurrisAuthData
     public string ServerKey { get; private set; }
     public string ClientKey { get; private set; }
 
-    public string GameCodesPath { get; private set; }
-    public string AccountsPath { get; private set; }
+    public string ServerKeyPath => Directory.GetCurrentDirectory() + "/serverKey.secret";
+    public string ClientKeyPath => Directory.GetCurrentDirectory() + "/clientKey.secret";
+    public string GameCodesPath => Directory.GetCurrentDirectory() + "/gameCodes.turris";
+    public string AccountsPath => Directory.GetCurrentDirectory() + "/accounts.turris";
 
     public object gameCodesLock = new();
     // <gameCodes>
@@ -33,48 +35,87 @@ public class TurrisAuthData
 
     public TurrisAuthData()
     {
-        GameCodesPath = Directory.GetCurrentDirectory() + "/gameCodes.turris";
-        AccountsPath = Directory.GetCurrentDirectory() + "/accounts.turris";
+        (ServerKey, ClientKey) = LoadKeys();
     }
 
+    #region DataManagement
     public void AddGameCode(string gameCode)
     {
         lock (gameCodesLock)
         {
-            gameCodes.Add(gameCode);
+            GameCodes.Add(gameCode);
         }
     }
-
     public void RemoveExpiredPlayers()
     {
         lock (playersLock)
         {
             DateTime now = DateTime.Now;
-            Players.FindAll(player => now >= player.expiration).ForEach(expiredPlayer =>
-            {
-                Players.Remove(expiredPlayer);
-                PlayerCache.TryRemove(expiredPlayer.username, out _);
-                PlayerCache.TryRemove(expiredPlayer.authToken, out _);
-            });
+            Players.FindAll(player => now >= player.expiration)
+                .ForEach(expiredPlayer => RemovePlayer(expiredPlayer));
         }
     }
+    #endregion DataManagement
 
-    public void QueueGameCodesSave()
+    #region PlayerManagement
+    public void AddPlayer(TurrisPlayer player)
     {
-        queuedSaveGameCodes = true;
+        lock (playersLock)
+        {
+            Players.Add(player);
+        }
+        PlayerCache.TryAdd(player.username, player);
+        PlayerCache.TryAdd(player.authToken, player);
     }
+    public void RemovePlayer(string username)
+    {
+        if (PlayerCache.TryRemove(username, out TurrisPlayer? player))
+        {
+            PlayerCache.TryRemove(player.authToken, out _);
+            lock (playersLock)
+            {
+                Players.Remove(player);
+            }
+        }
+    }
+    public void RemovePlayer(TurrisPlayer player)
+    {
+        Players.Remove(player);
+        PlayerCache.TryRemove(player.username, out _);
+        PlayerCache.TryRemove(player.authToken, out _);
+    }
+    public bool GetPlayer(string authToken, out TurrisPlayer? player)
+    {
+        return PlayerCache.TryGetValue(authToken, out player);
+    }
+    #endregion PlayerManagement
 
-    public void QueueAccountsSave()
+    #region AccountManagement
+    public void AddAccount(string username, string passwordHash)
     {
-        queuedSaveAccounts = true;
+        lock (accountsLock)
+            Accounts.Add(username, passwordHash);
     }
+    public void RemoveAccount(string username)
+    {
+        lock (accountsLock)
+            Accounts.Remove(username);
+    }
+    public bool GetPasswordHash(string username, out string? passwordHash)
+    {
+        bool accountExists;
+        lock (accountsLock)
+        {
+            accountExists = Accounts.TryGetValue(username, out passwordHash);
+        }
+        return accountExists;
+    }
+    #endregion AccountManagement
 
-    public async Task ForceSave()
-    {
-        queuedSaveGameCodes = true;
-        queuedSaveAccounts = true;
-        await Save();
-    }
+    #region SavingAndLoading
+    public void QueueSave() => queuedSaveAccounts = queuedSaveGameCodes = true;
+    public void QueueGameCodesSave() => queuedSaveGameCodes = true;
+    public void QueueAccountsSave() => queuedSaveAccounts = true;
 
     public async Task Save()
     {
@@ -95,7 +136,7 @@ public class TurrisAuthData
             List<KeyValuePair<string, string>> accountsCopy;
             lock (accountsLock)
             {
-                accountsCopy = new(accounts);
+                accountsCopy = new(Accounts);
             }
             List<string> accountLines = new();
             foreach ((string username, string passwordHash) in accountsCopy)
@@ -109,18 +150,44 @@ public class TurrisAuthData
 
     public async Task Load()
     {
-        ServerKey = await File.ReadAllTextAsync(Directory.GetCurrentDirectory() + "/serverKey.secret");
-        ClientKey = await File.ReadAllTextAsync(Directory.GetCurrentDirectory() + "/clientKey.secret");
-        if (File.Exists(gameCodesPath))
-            GameCodes = new(await File.ReadAllLinesAsync(GameCodesPath));
-        if (File.Exists(accountsPath))
+        if (File.Exists(GameCodesPath))
         {
+            GameCodes.Clear();
+            GameCodes.AddRange(await File.ReadAllLinesAsync(GameCodesPath));
+        }
+        if (File.Exists(AccountsPath))
+        {
+            Accounts.Clear();
             string[] accountLines = await File.ReadAllLinesAsync(AccountsPath);
             foreach (string accountLine in accountLines)
             {
                 string[] account = accountLine.Split(':');
-                accounts.Add(account[0], account[1]);
+                Accounts.Add(account[0], account[1]);
             }
         }
     }
+
+    private (string, string) LoadKeys()
+    {
+        string serverKey;
+        string clientKey;
+        if (!File.Exists(ServerKeyPath))
+        {
+            Console.WriteLine($"[TurrisAuthData] server key not found, creating file with new key");
+            serverKey = Guid.NewGuid().ToString();
+            File.WriteAllText(ServerKeyPath, serverKey);
+        }
+        else
+            serverKey = File.ReadAllText(ServerKeyPath);
+        if (!File.Exists(ClientKeyPath))
+        {
+            Console.WriteLine($"[TurrisAuthData] client key not found, creating file with new key");
+            clientKey = Guid.NewGuid().ToString();
+            File.WriteAllText(ClientKeyPath, clientKey);
+        }
+        else
+            clientKey = File.ReadAllText(ClientKeyPath);
+        return (serverKey, clientKey);
+    }
+    #endregion SavingAndLoading
 }

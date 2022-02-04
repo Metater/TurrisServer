@@ -19,6 +19,13 @@ public class TurrisPlayer
         this.authToken = authToken;
         this.expiration = expiration;
     }
+
+    public void Reset()
+    {
+        serverIntent = "";
+        serverIntentType = ServerIntentType.None;
+        serverIntentExpiration = DateTime.Now;
+    }
 }
 
 public enum ServerIntentType
