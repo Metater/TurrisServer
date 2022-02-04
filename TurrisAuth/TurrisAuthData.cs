@@ -19,16 +19,12 @@ public class TurrisAuthData
     public Dictionary<string, string> Accounts { get; private set; } = new();
 
     public object serversLock = new();
-    // <server>
+    // <server> <serverGuid|joinCode, server>
     public List<TurrisServer> Servers { get; private set; } = new();
-    // <serverGuid|joinCode, server>
-    public ConcurrentDictionary<string, TurrisServer> ServerCache { get; private set; } = new();
 
     public object playersLock = new();
-    // <player>
+    // <player> <username|authToken, player>
     public List<TurrisPlayer> Players { get; private set; } = new();
-    // <username|authToken, player>
-    public ConcurrentDictionary<string, TurrisPlayer> PlayerCache { get; private set; } = new();
 
     private bool queuedSaveGameCodes = false;
     private bool queuedSaveAccounts = false;
@@ -38,13 +34,56 @@ public class TurrisAuthData
         (ServerKey, ClientKey) = LoadKeys();
     }
 
-    #region DataManagement
-    public void AddGameCode(string gameCode)
+    #region GameCodes
+    public void AddGameCode(string gameCode, bool lock)
     {
-        lock (gameCodesLock)
+        if (lock)
         {
-            GameCodes.Add(gameCode);
+            lock (gameCodesLock)
+                GameCodes.Add(gameCode);
         }
+        else
+            GameCodes.Add(gameCode);
+    }
+    public void RemoveGameCode(string gameCode, bool lock)
+    {
+        if (lock)
+        {
+            lock (gameCodesLock)
+                GameCodes.Remove(gameCode);
+        }
+        else
+            GameCodes.Remove(gameCode);
+    }
+    #endregion GameCodes
+
+    #region Accounts
+    
+    #endregion Account
+
+    #region Servers
+    #endregion Servers
+
+    #region Players
+    #endregion Players
+
+    #region PlayerManagement
+    public void AddPlayer(TurrisPlayer player)
+    {
+        lock (playersLock)
+        {
+            Players.Add(player);
+        }
+    }
+    public void RemovePlayer(string username)
+    {
+        lock (playersLock)
+            Players.RemoveAll(player => player.username == username);
+    }
+    public void RemovePlayer(TurrisPlayer player)
+    {
+        lock (playersLock)
+            Players.Remove(player);
     }
     public void RemoveExpiredPlayers()
     {
@@ -54,35 +93,6 @@ public class TurrisAuthData
             Players.FindAll(player => now >= player.expiration)
                 .ForEach(expiredPlayer => RemovePlayer(expiredPlayer));
         }
-    }
-    #endregion DataManagement
-
-    #region PlayerManagement
-    public void AddPlayer(TurrisPlayer player)
-    {
-        lock (playersLock)
-        {
-            Players.Add(player);
-        }
-        PlayerCache.TryAdd(player.username, player);
-        PlayerCache.TryAdd(player.authToken, player);
-    }
-    public void RemovePlayer(string username)
-    {
-        if (PlayerCache.TryRemove(username, out TurrisPlayer? player))
-        {
-            PlayerCache.TryRemove(player.authToken, out _);
-            lock (playersLock)
-            {
-                Players.Remove(player);
-            }
-        }
-    }
-    public void RemovePlayer(TurrisPlayer player)
-    {
-        Players.Remove(player);
-        PlayerCache.TryRemove(player.username, out _);
-        PlayerCache.TryRemove(player.authToken, out _);
     }
     public bool GetPlayer(string authToken, out TurrisPlayer? player)
     {

@@ -28,13 +28,13 @@ public class TurrisValidation
         if (!await ctx.QueryExists("joinCode")) return (false, null);
         if (!authData.ServerCache.TryGetValue(ctx.GetQuery("joinCode"), out TurrisServer? server))
         {
-            await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
+            await ctx.Response.WriteAsync("400\nJoinCodeInvalid");
             return (false, null);
         }
         return (true, server);
     }
 
-    public async Task<(bool valid, string gameCode)> GameCode(HttpContext ctx)
+    public async Task<(bool valid, string gameCode)> GameCodeAndRemove(HttpContext ctx)
     {
         if(!await ctx.QueryExists("gameCode")) return (false, "");
         string gameCode = ctx.GetQuery("gameCode");
@@ -45,7 +45,7 @@ public class TurrisValidation
         }
         if (!gameCodeValid)
         {
-            await ctx.Response.WriteAsync("400\nInvalidGameCode");
+            await ctx.Response.WriteAsync("400\nGameCodeInvalid");
             return (false, "");
         }
         return (true, gameCode);
