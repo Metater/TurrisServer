@@ -34,7 +34,7 @@ public class TurrisAuthData
         (ServerKey, ClientKey) = LoadKeys();
     }
 
-    #region GameCodes
+    #region GameCodeManagement
     public void AddGameCode(string gameCode, bool lock)
     {
         if (lock)
@@ -55,17 +55,10 @@ public class TurrisAuthData
         else
             GameCodes.Remove(gameCode);
     }
-    #endregion GameCodes
+    #endregion GameCodeManagement
 
-    #region Accounts
-    
-    #endregion Account
-
-    #region Servers
-    #endregion Servers
-
-    #region Players
-    #endregion Players
+    #region ServerManagement
+    #endregion ServerManagement
 
     #region PlayerManagement
     public void AddPlayer(TurrisPlayer player)

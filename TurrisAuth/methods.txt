@@ -1,0 +1,52 @@
+
+
+Client {
+    createaccount
+        Usage:
+            Client creating an account
+    auth
+        Usage:
+            Clients authorizing themselves
+    intentvalid
+        Usage:
+            Servers ensuring clients have correct intent to join or create a game
+    creategame
+        Usage:
+            Clients create intent to create game
+    joingame
+        Usage:
+            Clients create intent to join game
+}
+
+Server {
+    startup
+        Usage:
+            Servers say they are starting up to auth server
+    shutdown
+        Usage:
+            Servers say they are shutting down to auth server
+    update
+        Usage:
+            Servers send state to auth server
+    poll
+        Usage:
+            Servers receive state from auth server
+    creategamecode
+        Usage:
+            Servers generating game codes
+    listgamecodes
+        Usage:
+            Servers list all of the game codes
+}
+
+Hybrid {
+    deleteaccount
+        Usage:
+            Client deleting their own account
+            Server deleting an account
+}
+
+Notes {
+    Make log of created accounts and which code is used
+    Make log of stuff in general
+}
