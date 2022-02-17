@@ -2,41 +2,30 @@
 
 Client {
     createaccount
-        Usage:
-            Client creating an account
+        Usage: Client creating an account
     auth
-        Usage:
-            Clients authorizing themselves
+        Usage: Clients authorizing themselves
     intentvalid
-        Usage:
-            Servers ensuring clients have correct intent to join or create a game
+        Usage: Servers ensuring clients have correct intent to join or create a game
     creategame
-        Usage:
-            Clients create intent to create game
+        Usage: Clients create intent to create game
     joingame
-        Usage:
-            Clients create intent to join game
+        Usage: Clients create intent to join game
 }
 
 Server {
     startup
-        Usage:
-            Servers say they are starting up to auth server
+        Usage: Servers say they are starting up to auth server
     shutdown
-        Usage:
-            Servers say they are shutting down to auth server
+        Usage: Servers say they are shutting down to auth server
     update
-        Usage:
-            Servers send state to auth server
+        Usage: Servers send state to auth server
     poll
-        Usage:
-            Servers receive state from auth server
+        Usage: Servers receive state from auth server
     creategamecode
-        Usage:
-            Servers generating game codes
+        Usage: Servers generating game codes
     listgamecodes
-        Usage:
-            Servers list all of the game codes
+        Usage: Servers list all of the game codes
 }
 
 Hybrid {
