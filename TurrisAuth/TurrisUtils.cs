@@ -31,8 +31,4 @@ public static class TurrisUtils
         byte[] result = sha.ComputeHash(Encoding.ASCII.GetBytes(data));
         return Convert.ToBase64String(result);
     }
-
-
-
-
 }

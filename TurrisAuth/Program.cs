@@ -1,47 +1,15 @@
 var builder = WebApplication.CreateBuilder();
 
-TurrisAuthData authData = new();
-await authData.Load();
-TurrisValidation validation = new(authData);
+TurrisAuthData data = new();
+await data.Load();
+TurrisValidation validation = new(data);
 
-var app = builder.Build();
+WebApplication app = builder.Build();
+
+TurrisClientAuthHandler clientAuth = new(app, data, validation);
+TurrisClientAuthHandler serverAuth = new(app, data, validation);
 
 //app.UseHttpsRedirection();
-
-app.MapGet("/createaccount", async ctx =>
-{
-    if (!await validation.AuthClient(ctx)) return;
-
-    (bool validGamecode, string gameCode) = await validation.GameCode(ctx);
-    if (!validGamecode) return;
-
-    (bool validPassword, string password) = await validation.Password(ctx);
-    if (!validPassword)
-    {
-        authData.AddGameCode(gameCode);
-        return;
-    }
-
-    string passwordHash = TurrisUtils.Hash(password);
-
-    (bool validUsername, string username) = await validation.Username(ctx);
-    if (!validUsername)
-    {
-        authData.AddGameCode(gameCode);
-        return;
-    }
-    if (validation.UsernameExists(username))
-    {
-        await ctx.Response.WriteAsync("400\nUsernameExists");
-        authData.AddGameCode(gameCode);
-        return;
-    }
-    authData.AddAccount(username, passwordHash);
-
-    authData.QueueSave();
-
-    await ctx.Response.WriteAsync("200");
-});
 
 app.MapGet("/deleteaccount", async ctx =>
 {
@@ -55,51 +23,12 @@ app.MapGet("/deleteaccount", async ctx =>
         return;
     }
 
-    authData.RemoveAccount(username);
+    data.RemoveAccount(username);
 
-    authData.QueueAccountsSave();
-    authData.RemovePlayer(username);
+    data.QueueAccountsSave();
+    data.RemovePlayer(username);
 
     await ctx.Response.WriteAsync("200");
-});
-
-app.MapGet("/auth", async ctx =>
-{
-    if (!await validation.AuthClient(ctx)) return;
-
-    (bool validUsername, string username) = await validation.Username(ctx);
-    if (!validUsername) return;
-    if (!validation.UsernameExists(username))
-    {
-        await ctx.Response.WriteAsync("400\nUsernameNotFound");
-        return;
-    }
-
-    (bool validPassword, string password) = await validation.Password(ctx);
-    if (!validPassword) return;
-
-    string providedPasswordHash = TurrisUtils.Hash(password);
-
-    bool passwordInvalid = false;
-    if (authData.GetPasswordHash(username, out string? passwordHash))
-    {
-        passwordInvalid = providedPasswordHash != passwordHash!;
-    }
-    else
-        passwordInvalid = true;
-
-    if (passwordInvalid)
-    {
-        await ctx.Response.WriteAsync("400\nPasswordInvalid");
-        return;
-    }
-
-    authData.RemovePlayer(username);
-
-    string authToken = Guid.NewGuid().ToString();
-    TurrisPlayer authEntry = new(username, authToken, DateTime.Now.AddHours(12));
-    authData.AddPlayer(authEntry);
-    await ctx.Response.WriteAsync($"200\nAuthToken:{authToken}");
 });
 
 

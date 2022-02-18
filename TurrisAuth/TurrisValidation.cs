@@ -15,7 +15,7 @@ public class TurrisValidation
     public async Task<(bool valid, TurrisPlayer? player)> AuthToken(HttpContext ctx)
     {
         if (!await ctx.QueryExists("authToken")) return (false, null);
-        if (!authData.PlayerCache.TryGetValue(ctx.GetQuery("authToken"), out TurrisPlayer? player))
+        if (!authData.GetPlayer(ctx.GetQuery("authToken"), out TurrisPlayer? player))
         {
             await ctx.Response.WriteAsync("400\nAuthTokenInvalid");
             return (false, null);
@@ -34,7 +34,7 @@ public class TurrisValidation
         return (true, server);
     }
 
-    public async Task<(bool valid, string gameCode)> GameCodeAndRemove(HttpContext ctx)
+    public async Task<(bool valid, string gameCode)> GameCode(HttpContext ctx)
     {
         if(!await ctx.QueryExists("gameCode")) return (false, "");
         string gameCode = ctx.GetQuery("gameCode");
@@ -114,7 +114,7 @@ public class TurrisValidation
 
     private static bool PasswordValid(string password)
     {
-        return password.Length >= 6;
+        return password.Length >= 6 && password.Length <= 18;
     }
 
     private static bool UsernameValid(string username)
@@ -123,8 +123,4 @@ public class TurrisValidation
             username.Length >= 1 &&
             username.Length <= 16;
     }
-
-
-
-    // move the rest of validation logic here
 }

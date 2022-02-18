@@ -35,38 +35,38 @@ public class TurrisAuthData
     }
 
     #region GameCodeManagement
-    public void AddGameCode(string gameCode, bool lock)
+    public void AddGameCode(string gameCode)
     {
-        if (lock)
-        {
-            lock (gameCodesLock)
-                GameCodes.Add(gameCode);
-        }
-        else
+        lock (gameCodesLock)
             GameCodes.Add(gameCode);
     }
-    public void RemoveGameCode(string gameCode, bool lock)
+    public void RemoveGameCode(string gameCode)
     {
-        if (lock)
-        {
-            lock (gameCodesLock)
-                GameCodes.Remove(gameCode);
-        }
-        else
+        lock (gameCodesLock)
             GameCodes.Remove(gameCode);
     }
     #endregion GameCodeManagement
 
     #region ServerManagement
+    public bool GetJoinCode(string joinCode, out TurrisPlayer? player)
+    {
+        lock (serversLock)
+            player = Servers.Find(server => server. == authToken);
+        return player != null;
+    }
     #endregion ServerManagement
 
     #region PlayerManagement
     public void AddPlayer(TurrisPlayer player)
     {
         lock (playersLock)
-        {
             Players.Add(player);
-        }
+    }
+    public bool GetPlayer(string authToken, out TurrisPlayer? player)
+    {
+        lock (playersLock)
+            player = Players.Find(player => player.authToken == authToken);
+        return player != null;
     }
     public void RemovePlayer(string username)
     {
@@ -86,10 +86,6 @@ public class TurrisAuthData
             Players.FindAll(player => now >= player.expiration)
                 .ForEach(expiredPlayer => RemovePlayer(expiredPlayer));
         }
-    }
-    public bool GetPlayer(string authToken, out TurrisPlayer? player)
-    {
-        return PlayerCache.TryGetValue(authToken, out player);
     }
     #endregion PlayerManagement
 

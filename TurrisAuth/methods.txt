@@ -5,8 +5,6 @@ Client {
         Usage: Client creating an account
     auth
         Usage: Clients authorizing themselves
-    intentvalid
-        Usage: Servers ensuring clients have correct intent to join or create a game
     creategame
         Usage: Clients create intent to create game
     joingame
@@ -22,6 +20,8 @@ Server {
         Usage: Servers send state to auth server
     poll
         Usage: Servers receive state from auth server
+    intentvalid
+          Usage: Servers ensuring clients have correct intent to join or create a game
     creategamecode
         Usage: Servers generating game codes
     listgamecodes
