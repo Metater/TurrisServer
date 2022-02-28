@@ -9,8 +9,10 @@ public class TurrisValidation
         this.authData = authData;
     }
 
-    public async Task<bool> AuthServer(HttpContext ctx) => await ctx.ValidateKey(key => key == authData.ServerKey);
-    public async Task<bool> AuthClient(HttpContext ctx) => await ctx.ValidateKey(key => key == authData.ClientKey);
+    public async Task<bool> AuthServer(HttpContext ctx) =>
+        await ctx.ValidateKey(key => key == authData.ServerKey);
+    public async Task<bool> AuthClient(HttpContext ctx) =>
+        await ctx.ValidateKey(key => key == authData.ClientKey);
 
     public async Task<(bool valid, TurrisPlayer? player)> AuthToken(HttpContext ctx)
     {
@@ -100,16 +102,6 @@ public class TurrisValidation
         }
 
         await ctx.Response.WriteAsync($"200\nUsername:{player.username}");
-    }
-
-    public bool UsernameExists(string username)
-    {
-        bool usernameExists;
-        lock (authData.accountsLock)
-        {
-            usernameExists = authData.Accounts.ContainsKey(username);
-        }
-        return usernameExists;
     }
 
     private static bool PasswordValid(string password)
