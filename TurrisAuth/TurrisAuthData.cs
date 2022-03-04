@@ -100,7 +100,7 @@ public class TurrisAuthData
         lock (accountsLock)
             Accounts.Remove(username);
     }
-    public bool GetPasswordHash(string username, out string? passwordHash)
+    public bool TryGetAccount(string username, out string? passwordHash)
     {
         bool accountExists;
         lock (accountsLock)

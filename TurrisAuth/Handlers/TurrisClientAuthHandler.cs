@@ -25,20 +25,21 @@ public class TurrisClientAuthHandler : TurrisAuthHandler
             return;
         }
 
-        string passwordHash = TurrisUtils.Hash(password);
-
         (bool validUsername, string username) = await validation.Username(ctx);
         if (!validUsername)
         {
             data.AddGameCode(gameCode);
             return;
         }
-        if (validation.UsernameExists(username))
+
+        if (data.TryGetAccount(username, out _))
         {
             await ctx.Response.WriteAsync("400\nUsernameExists");
             data.AddGameCode(gameCode);
             return;
         }
+        
+        string passwordHash = TurrisUtils.Hash(password);
         data.AddAccount(username, passwordHash);
 
         data.QueueSave();
