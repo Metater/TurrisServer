@@ -24,6 +24,7 @@ public static class MiddlewareExtensions
 
     public static IApplicationBuilder UseKeyAuth(this IApplicationBuilder app)
     {
+        ulong.Parse
         return app.Use(async (ctx, next) =>
         {
             if (ctx.Request.Query.ContainsKey("skey"))
