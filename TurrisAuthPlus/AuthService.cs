@@ -4,7 +4,8 @@ public class AuthService
 {
     public readonly static Dictionary<string, List<string>> Endpoints = new()
     {
-        { "/client/accounts/create", new List<string>() { "key", "gameCode", "username", "password" } }
+        { "/client/accounts/create", new List<string>() { "key", "gameCode", "username", "password" } },
+        { "/test", new List<string>() { "i" } }
     };
 
     private static string ClientKeysPath => Directory.GetCurrentDirectory() + "/clientKeys.secret";

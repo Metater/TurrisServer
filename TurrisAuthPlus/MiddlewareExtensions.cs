@@ -26,7 +26,18 @@ public static class MiddlewareExtensions
     {
         return app.Use(async (ctx, next) =>
         {
-            await next(ctx);
+            if (ctx.Request.Query.ContainsKey("skey"))
+            {
+                await next(ctx);
+            }
+            else if (ctx.Request.Query.ContainsKey("ckey"))
+            {
+                await next(ctx);
+            }
+            else
+            {
+                await next(ctx);
+            }
         });
     }
 }
