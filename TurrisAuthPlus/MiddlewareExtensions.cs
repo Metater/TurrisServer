@@ -24,21 +24,27 @@ public static class MiddlewareExtensions
 
     public static IApplicationBuilder UseKeyAuth(this IApplicationBuilder app)
     {
-        ulong.Parse
         return app.Use(async (ctx, next) =>
         {
             if (ctx.Request.Query.ContainsKey("skey"))
             {
-                await next(ctx);
+                if (Guid.TryParse(ctx.Request.Query["skey"], out Guid guid) && AuthService.AuthServer(guid))
+                {
+                    await next(ctx);
+                    return;
+                }
             }
             else if (ctx.Request.Query.ContainsKey("ckey"))
             {
-                await next(ctx);
+                if (Guid.TryParse(ctx.Request.Query["ckey"], out Guid guid) && AuthService.AuthClient(guid))
+                {
+                    await next(ctx);
+                    return;
+                }
             }
-            else
-            {
-                await next(ctx);
-            }
+
+            ctx.Response.StatusCode = StatusCodes.Status401Unauthorized;
+            await ctx.Response.WriteAsync("401");
         });
     }
 }
