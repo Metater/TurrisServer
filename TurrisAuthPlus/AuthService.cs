@@ -2,7 +2,7 @@
 
 public class AuthService
 {
-    private IServiceProvider serviceProvider;
+    private Services services;
 
     public readonly static Dictionary<string, List<string>> Endpoints = new()
     {
@@ -10,15 +10,15 @@ public class AuthService
         { "/test", new List<string>() { "ckey", "i" } }
     };
 
-    private static string ClientKeysPath => Directory.GetCurrentDirectory() + "/clientKeys.secret";
-    private static string ServerKeysPath => Directory.GetCurrentDirectory() + "/serverKeys.secret";
+    private static string ClientKeysPath = Directory.GetCurrentDirectory() + "/clientKeys.secret";
+    private static string ServerKeysPath = Directory.GetCurrentDirectory() + "/serverKeys.secret";
 
     private static readonly List<Guid> clientKeys = new();
     private static readonly List<Guid> serverKeys = new();
 
-    public AuthService(IServiceProvider serviceProvider)
+    public AuthService(Services services)
     {
-        this.serviceProvider = serviceProvider;
+        this.services = services;
         LoadKeys(clientKeys, ClientKeysPath);
         LoadKeys(serverKeys, ServerKeysPath);
     }

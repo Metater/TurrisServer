@@ -2,14 +2,14 @@
 
 public class AccountsService
 {
-    private IServiceProvider serviceProvider;
+    private Services services;
 
     private readonly object accountsLock = new();
     private readonly Dictionary<string, string> accounts = new();
-    66
-    public AccountsService(IServiceProvider serviceProvider)
+    
+    public AccountsService(Services services)
     {
-        this.serviceProvider = serviceProvider;
+        this.services = services;
     }
 
     public async Task<IResult> CreateAccount(string gameCode, string username, string password)
