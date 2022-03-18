@@ -3,7 +3,7 @@
 Client {
     createaccount
         Usage: Client creating an account
-    auth
+    authplayer
         Usage: Clients authorizing themselves
     creategame
         Usage: Clients create intent to create game

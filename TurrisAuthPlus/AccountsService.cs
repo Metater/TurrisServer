@@ -12,10 +12,14 @@ public class AccountsService
         this.services = services;
     }
 
-    public async Task<IResult> CreateAccount(string gameCode, string username, string password)
+    public bool TryCreateAccount(string username, string password, out string message)
     {
+        lock (accountsLock)
+        {
+            if (accounts.ContainsKey(username))
+                message = "400\nUsernameExists";
 
-        return Results.Ok("Created account");
+        }
     }
 
 }

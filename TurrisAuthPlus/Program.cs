@@ -8,6 +8,9 @@ app.UseEndpointAuth();
 app.UseKeyAuth();
 
 app.MapGet("/client/createaccount", async (string gameCode, string username, string password) =>
-    await services.auth.CreateAccount(gameCode, username, password));
+    await services.accounts.CreateAccount(gameCode, username, password));
+
+app.MapGet("/client/authplayer", async (string username, string password) =>
+    await services.players.AuthPlayer(username, password));
 
 app.Run();
