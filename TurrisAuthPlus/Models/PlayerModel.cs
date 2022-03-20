@@ -1,4 +1,4 @@
-﻿namespace TurrisAuthPlus;
+﻿namespace TurrisAuthPlus.Models;
 
 public enum ServerIntentType
 {
@@ -7,7 +7,7 @@ public enum ServerIntentType
     JoinGame
 }
 
-public record Player(string Username, Guid AuthToken, DateTime Expiration)
+public record PlayerModel(string Username, Guid AuthToken, DateTime Expiration)
 {
     public Guid serverIntent = Guid.Empty;
     public ServerIntentType serverIntentType = ServerIntentType.None;

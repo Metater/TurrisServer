@@ -1,7 +1,14 @@
-﻿namespace TurrisAuthPlus;
+﻿namespace TurrisAuthPlus.Services;
 
 public class TurrisClientService
 {
+    private TurrisServices services;
+
+    public TurrisClientService(TurrisServices services)
+    {
+        this.services = services;
+    }
+
     public async Task<string> CreateAccount(string gameCode, string username, string password)
     {
         return $"{gameCode} {username} {password}";

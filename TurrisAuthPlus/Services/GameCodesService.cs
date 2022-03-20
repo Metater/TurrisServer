@@ -1,13 +1,13 @@
-﻿namespace TurrisAuthPlus;
+﻿namespace TurrisAuthPlus.Services;
 
 public class GameCodesService
 {
-    private Services services;
+    private TurrisServices services;
 
     private readonly object gameCodesLock = new();
     private readonly List<string> gameCodes = new();
     
-    public GameCodesService(Services services)
+    public GameCodesService(TurrisServices services)
     {
         this.services = services;
     }

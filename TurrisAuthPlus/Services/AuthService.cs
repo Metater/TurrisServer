@@ -1,8 +1,8 @@
-﻿namespace TurrisAuthPlus;
+﻿namespace TurrisAuthPlus.Services;
 
 public class AuthService
 {
-    private Services services;
+    private TurrisServices services;
 
     public readonly static Dictionary<string, List<string>> Endpoints = new()
     {
@@ -16,7 +16,7 @@ public class AuthService
     private static readonly List<Guid> clientKeys = new();
     private static readonly List<Guid> serverKeys = new();
 
-    public AuthService(Services services)
+    public AuthService(TurrisServices services)
     {
         this.services = services;
         LoadKeys(clientKeys, ClientKeysPath);

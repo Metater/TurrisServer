@@ -1,13 +1,13 @@
-﻿namespace TurrisAuthPlus;
+﻿namespace TurrisAuthPlus.Services;
 
 public class AccountsService
 {
-    private Services services;
+    private TurrisServices services;
 
     private readonly object accountsLock = new();
     private readonly Dictionary<string, string> accounts = new();
     
-    public AccountsService(Services services)
+    public AccountsService(TurrisServices services)
     {
         this.services = services;
     }

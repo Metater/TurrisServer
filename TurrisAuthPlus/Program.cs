@@ -1,6 +1,6 @@
 var builder = WebApplication.CreateBuilder(args);
 
-Services services = new();
+TurrisServices services = new();
 
 var app = builder.Build();
 
@@ -8,9 +8,9 @@ app.UseEndpointAuth();
 app.UseKeyAuth();
 
 app.MapGet("/client/createaccount", async (string gameCode, string username, string password) =>
-    await services.accounts.CreateAccount(gameCode, username, password));
+    await services.turrisClient.CreateAccount(gameCode, username, password));
 
 app.MapGet("/client/authplayer", async (string username, string password) =>
-    await services.players.AuthPlayer(username, password));
+    await services.turrisClient.AuthPlayer(username, password));
 
 app.Run();

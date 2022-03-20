@@ -15,7 +15,7 @@ public class AuthData
 	private readonly List<string> servers = new();
 
 	private readonly object playersLock = new();
-	private readonly List<Player> players = new();
+	private readonly List<PlayerModel> players = new();
 
 	private readonly List<Guid> clientKeys = new();
 	private readonly List<Guid> serverKeys = new();
