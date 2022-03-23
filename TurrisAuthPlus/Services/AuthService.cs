@@ -2,7 +2,7 @@
 
 public class AuthService
 {
-    private TurrisServices services;
+    private readonly TurrisServices services;
 
     public readonly static Dictionary<string, List<string>> Endpoints = new()
     {
@@ -10,8 +10,8 @@ public class AuthService
         { "/client/authplayer", new List<string>() { "ckey", "username", "password" } }
     };
 
-    private static string ClientKeysPath = Directory.GetCurrentDirectory() + "/clientKeys.secret";
-    private static string ServerKeysPath = Directory.GetCurrentDirectory() + "/serverKeys.secret";
+    private static readonly string ClientKeysPath = Directory.GetCurrentDirectory() + "/clientKeys.secret";
+    private static readonly string ServerKeysPath = Directory.GetCurrentDirectory() + "/serverKeys.secret";
 
     private static readonly List<Guid> clientKeys = new();
     private static readonly List<Guid> serverKeys = new();

@@ -2,7 +2,7 @@
 
 public class TurrisClientService
 {
-    private TurrisServices services;
+    private readonly TurrisServices services;
 
     public TurrisClientService(TurrisServices services)
     {
@@ -53,7 +53,7 @@ public class TurrisClientService
         PlayerModel? player = null;
         ServerModel? server = null;
         GameModel? game = null;
-        if (!services.players.PlayerValid(authToken, (validatedPlayer) =>
+        if (!services.players.PlayerValid(authToken, validatedPlayer =>
         {
             player = validatedPlayer;
             createdGame = services.servers.TryCreateGame(validatedPlayer, out server, out game);
@@ -73,10 +73,10 @@ public class TurrisClientService
         PlayerModel? player = null;
         ServerModel? server = null;
         GameModel? game = null;
-        if (!services.players.PlayerValid(authToken, (validatedPlayer) =>
+        if (!services.players.PlayerValid(authToken, validatedPlayer =>
         {
             player = validatedPlayer;
-            joinedGame = services.servers.TryJoinGame(validatedPlayer, validatedPlayer.serverIntent, joinCode, out game);
+            joinedGame = services.servers.TryJoinGame(validatedPlayer, joinCode, out game);
         })) return "400\nAuthTokenInvalid";
         if (!joinedGame)
             return "400\nJoinGameFailed";

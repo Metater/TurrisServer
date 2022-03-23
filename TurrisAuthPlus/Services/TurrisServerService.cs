@@ -2,7 +2,7 @@
 
 public class TurrisServerService
 {
-    private TurrisServices services;
+    private readonly TurrisServices services;
 
     public TurrisServerService(TurrisServices services)
     {

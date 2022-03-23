@@ -2,7 +2,7 @@
 
 public class GameCodesService
 {
-    private TurrisServices services;
+    private readonly TurrisServices services;
 
     private readonly object gameCodesLock = new();
     private readonly List<string> gameCodes = new();

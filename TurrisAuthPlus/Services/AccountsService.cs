@@ -2,7 +2,7 @@
 
 public class AccountsService
 {
-    private TurrisServices services;
+    private readonly TurrisServices services;
 
     private readonly object accountsLock = new();
     private readonly Dictionary<string, string> accounts = new();

@@ -2,7 +2,7 @@ namespace TurrisAuthPlus.Services;
 
 public class ServersService
 {
-    private TurrisServices services;
+    private readonly TurrisServices services;
 
     private readonly object serversLock = new();
     private readonly List<ServerModel> servers = new();
@@ -34,15 +34,21 @@ public class ServersService
         }
     }
 
-    public bool TryJoinGame(PlayerModel player, string serverId, string joinCode, out GameModel? game)
+    public bool TryJoinGame(PlayerModel player, string joinCode, out GameModel? game)
     {
         game = null;
         lock (serversLock)
         {
-            ServerModel? server = servers.Find(s => s.ServerId == serverId);
+            if (player.IsInGame())
+                return false;
+            ServerModel? server = servers.Find(s => s.ServerId == player.serverIntent);
             if (server is null)
                 return false;
-            return server.TryJoinGame(player, joinCode, out game);
+            if (!server.TryGetGame(joinCode, out game))
+                return false;
+            game!.JoinGame(player);
+            player.currentGame = joinCode;
+            return true;
         }
     }
 
@@ -50,7 +56,7 @@ public class ServersService
     {
         string alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
         string joinCode = "";
-        while (joinCode == "" || servers.Any(s => s.IsJoinCodeUniqueForServer(joinCode)))
+        while (joinCode == "" || servers.Any(s => s.IsJoinCodeUnique(joinCode)))
         {
             joinCode = new string(Enumerable.Repeat(alphabet, 4).Select(s => s[random.Next(s.Length)]).ToArray());
         }

@@ -12,13 +12,10 @@ public record ServerModel(string ServerId, string Endpoint)
         return game;
     }
 
-    public bool TryJoinGame(PlayerModel player, string joinCode, out GameModel? game)
+    public bool TryGetGame(string joinCode, out GameModel? game)
     {
         game = games.Find(g => g.JoinCode == joinCode);
-        if (game is null)
-            return false;
-        game.TryJoinGame(player);
-        return true;
+        return game is not null;
     }
 
     public int CalculateLoadFactor()
@@ -27,7 +24,7 @@ public record ServerModel(string ServerId, string Endpoint)
         return games.Sum(g => g.GetPlayerCount());
     }
 
-    public bool IsJoinCodeUniqueForServer(string joinCode)
+    public bool IsJoinCodeUnique(string joinCode)
     {
         return (!unpolledGames.Any(g => g.JoinCode == joinCode)) && (!games.Any(g => g.JoinCode == joinCode));
     }

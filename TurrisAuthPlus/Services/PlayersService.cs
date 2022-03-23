@@ -2,7 +2,7 @@ namespace TurrisAuthPlus.Services;
 
 public class PlayersService
 {
-    private TurrisServices services;
+    private readonly TurrisServices services;
 
     private readonly object playersLock = new();
     private readonly List<PlayerModel> players = new();
