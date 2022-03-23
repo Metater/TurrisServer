@@ -9,8 +9,9 @@ public class TurrisServerService
         this.services = services;
     }
 
-    public async Task<string> DeleteAccount(string username, string password)
+    public string DeleteAccount(string username)
     {
-        return $"{username} {password}";
+        services.accounts.DeleteAccount(username);
+        return "200";
     }
 }

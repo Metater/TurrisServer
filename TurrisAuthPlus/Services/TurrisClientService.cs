@@ -9,23 +9,50 @@ public class TurrisClientService
         this.services = services;
     }
 
-    public async Task<string> CreateAccount(string gameCode, string username, string password)
+    public string CreateAccount(string gameCode, string username, string password)
     {
-        return $"{gameCode} {username} {password}";
+        if (!TurrisUtils.GameCodeValid(gameCode))
+            return "400\nGameCodeInvalid";
+        if (!TurrisUtils.UsernameValid(username))
+            return "400\nUsernameInvalid";
+        if (!TurrisUtils.PasswordValid(password))
+            return "400\nPasswordInvalid";
+        if (!services.gameCodes.TryLockGameCode(gameCode))
+            return "400\nGameCodeInvalid";
+        if (!services.accounts.TryCreateAccount(username, password))
+            return "400\nUsernameExists";
+        return "200";
     }
-    public async Task<string> DeleteAccount(string username, string password)
+    public string DeleteAccount(string username, string password)
     {
-        return $"{username} {password}";
+        if (!TurrisUtils.UsernameValid(username))
+            return "400\nUsernameInvalid";
+        if (!TurrisUtils.PasswordValid(password))
+            return "400\nPasswordInvalid";
+        if (!services.accounts.AccountValid(username, password))
+            return "400\nAccountInvalid";
+        services.accounts.DeleteAccount(username);
+        return "200";
     }
-    public async Task<string> AuthPlayer(string username, string password)
+    public string AuthPlayer(string username, string password)
     {
-        return $"{username} {password}";
+        if (!TurrisUtils.UsernameValid(username))
+            return "400\nUsernameInvalid";
+        if (!TurrisUtils.PasswordValid(password))
+            return "400\nPasswordInvalid";
+        if (!services.accounts.AccountValid(username, password))
+            return "400\nAccountInvalid";
+        PlayerModel player = services.players.GetRenewedPlayer(username);
+        return $"200\nAuthToken:{player.AuthToken}";
     }
-    public async Task<string> CreateGame(string authToken)
+    public string CreateGame(string authToken)
     {
+        if (!services.players.PlayerValid(authToken, out PlayerModel player))
+            return "400\nAuthTokenInvalid";
+
         return $"{authToken}";
     }
-    public async Task<string> JoinGame(string authToken)
+    public string JoinGame(string authToken)
     {
         return $"{authToken}";
     }

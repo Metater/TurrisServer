@@ -1,19 +1,12 @@
 ﻿namespace TurrisAuthPlus.Models;
 
-public enum ServerIntentType
+public record PlayerModel(string Username, string AuthToken, DateTime Expiration)
 {
-    None,
-    CreateGame,
-    JoinGame
-}
-
-public record PlayerModel(string Username, Guid AuthToken, DateTime Expiration)
-{
-    public Guid serverIntent = Guid.Empty;
+    public string serverIntent = "";
     public ServerIntentType serverIntentType = ServerIntentType.None;
     public DateTime serverIntentExpiration = DateTime.Now;
 
-    public bool IsServerIntent(Guid serverIntent)
+    public bool IsServerIntent(string serverIntent)
     {
         return this.serverIntent == serverIntent;
     }
@@ -28,8 +21,15 @@ public record PlayerModel(string Username, Guid AuthToken, DateTime Expiration)
 
     public void ResetServerIntent()
     {
-        serverIntent = Guid.Empty;
+        serverIntent = "";
         serverIntentType = ServerIntentType.None;
         serverIntentExpiration = DateTime.Now;
+    }
+
+    public enum ServerIntentType
+    {
+        None,
+        CreateGame,
+        JoinGame
     }
 }

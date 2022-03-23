@@ -12,4 +12,12 @@ public class GameCodesService
         this.services = services;
     }
 
+    public bool TryLockGameCode(string gameCode)
+    {
+        lock (gameCodesLock)
+        {
+            return gameCodes.Remove(gameCode);
+        }
+    }
+
 }

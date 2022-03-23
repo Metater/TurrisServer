@@ -16,8 +16,17 @@ public static class TurrisUtils
 
     public static bool UsernameValid(string username)
     {
-        return Regex.IsMatch(username, @"^[a-zA-Z0-9_]+$") &&
-            username.Length >= 1 &&
-            username.Length <= 16;
+        return username.Length >= 1 && username.Length <= 16 &&
+            Regex.IsMatch(username, @"^[a-zA-Z0-9_]+$");
+    }
+
+    public static bool GameCodeValid(string gameCode)
+    {
+        return gameCode.Length >= 1 && gameCode.Length <= 64;
+    }
+
+    public static bool AuthTokenValid(string gameCode)
+    {
+        return gameCode.Length >= 1 && gameCode.Length <= 64;
     }
 }
