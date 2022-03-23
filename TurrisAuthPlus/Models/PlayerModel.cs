@@ -6,17 +6,22 @@ public record PlayerModel(string Username, string AuthToken, DateTime Expiration
     public ServerIntentType serverIntentType = ServerIntentType.None;
     public DateTime serverIntentExpiration = DateTime.Now;
 
-    public bool IsServerIntent(string serverIntent)
+    public string currentGame = "";
+
+    public bool IsServerIntent(string serverIntent) =>
+        this.serverIntent == serverIntent;
+    public bool IsServerIntentType(ServerIntentType serverIntentType) => 
+        this.serverIntentType == serverIntentType;
+    public bool IsServerIntentExpired() =>
+        serverIntentExpiration <= DateTime.Now;
+
+    public bool IsInGame() => currentGame == "";
+
+    public void SetServerIntent(string serverId, ServerIntentType serverIntentType)
     {
-        return this.serverIntent == serverIntent;
-    }
-    public bool IsServerIntentType(ServerIntentType serverIntentType)
-    {
-        return this.serverIntentType == serverIntentType;
-    }
-    public bool IsServerIntentExpired()
-    {
-        return serverIntentExpiration <= DateTime.Now;
+        serverIntent = serverId;
+        this.serverIntentType = serverIntentType;
+        serverIntentExpiration = DateTime.Now.AddMinutes(1);
     }
 
     public void ResetServerIntent()

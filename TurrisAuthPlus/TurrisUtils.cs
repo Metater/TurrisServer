@@ -29,4 +29,9 @@ public static class TurrisUtils
     {
         return gameCode.Length >= 1 && gameCode.Length <= 64;
     }
+
+    public static bool JoinCodeValid(string gameCode)
+    {
+        return gameCode.Length == 4;
+    }
 }

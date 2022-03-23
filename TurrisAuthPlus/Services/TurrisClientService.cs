@@ -47,13 +47,40 @@ public class TurrisClientService
     }
     public string CreateGame(string authToken)
     {
-        if (!services.players.PlayerValid(authToken, out PlayerModel player))
+        if (!TurrisUtils.AuthTokenValid(authToken))
             return "400\nAuthTokenInvalid";
-
-        return $"{authToken}";
+        bool createdGame = false;
+        PlayerModel? player = null;
+        ServerModel? server = null;
+        GameModel? game = null;
+        if (!services.players.PlayerValid(authToken, (validatedPlayer) =>
+        {
+            player = validatedPlayer;
+            createdGame = services.servers.TryCreateGame(validatedPlayer, out server, out game);
+        })) return "400\nAuthTokenInvalid";
+        if (!createdGame)
+            return "400\nReserveServerFailed";
+        player!.SetServerIntent(server!.ServerId, PlayerModel.ServerIntentType.CreateGame);
+        return $"200\nEndpoint:{server.Endpoint}";
     }
-    public string JoinGame(string authToken)
+    public string JoinGame(string authToken, string joinCode)
     {
-        return $"{authToken}";
+        if (!TurrisUtils.AuthTokenValid(authToken))
+            return "400\nAuthTokenInvalid";
+        if (!TurrisUtils.JoinCodeValid(joinCode))
+            return "400\nJoinCodeInvalid";
+        bool joinedGame = false;
+        PlayerModel? player = null;
+        ServerModel? server = null;
+        GameModel? game = null;
+        if (!services.players.PlayerValid(authToken, (validatedPlayer) =>
+        {
+            player = validatedPlayer;
+            joinedGame = services.servers.TryJoinGame(validatedPlayer, validatedPlayer.serverIntent, joinCode, out game);
+        })) return "400\nAuthTokenInvalid";
+        if (!joinedGame)
+            return "400\nJoinGameFailed";
+        player!.SetServerIntent(server!.ServerId, PlayerModel.ServerIntentType.JoinGame);
+        return $"200\nEndpoint:{server.Endpoint}";
     }
 }

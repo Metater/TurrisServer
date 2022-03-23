@@ -7,6 +7,10 @@ var app = builder.Build();
 app.UseEndpointAuth();
 app.UseKeyAuth();
 
+// check for players expiration when creating games and joining games or taking any authToken inputs
+
+// check periodically for players that are expired and are not in any servers, ONLY condition for removal
+
 app.MapGet("/client/createaccount", (string gameCode, string username, string password) =>
     services.turrisClient.CreateAccount(gameCode, username, password));
 

@@ -23,12 +23,17 @@ public class PlayersService
         }
     }
 
-    public bool PlayerValid(string authToken, out PlayerModel player)
+    public bool PlayerValid(string authToken, Action<PlayerModel>? validAction = null)
     {
         lock (playersLock)
         {
-            player = players.Find(p => p.AuthToken == authToken)!;
-            return player is not null;
+            PlayerModel player = players.Find(p => p.AuthToken == authToken)!;
+            if (player is not null)
+            {
+                validAction?.Invoke(player);
+                return true;
+            }
         }
+        return false;
     }
 }
