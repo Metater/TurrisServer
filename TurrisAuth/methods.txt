@@ -12,9 +12,9 @@ Client {
 }
 
 Server {
-    startup
+    start
         Usage: Servers say they are starting up to auth server
-    shutdown
+    stop
         Usage: Servers say they are shutting down to auth server
     update
         Usage: Servers send state to auth server

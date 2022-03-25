@@ -14,6 +14,22 @@ public class ServersService
         this.services = services;
     }
 
+    public void StartServer(string serverId, string endpoint)
+    {
+        StopServer(serverId);
+        ServerModel server = new(serverId, endpoint);
+        server.Start();
+    }
+
+    public void StopServer(string serverId)
+    {
+        ServerModel? server = servers.Find(s => s.ServerId == serverId);
+        if (server is null)
+            return;
+        servers.Remove(server);
+        server.Stop();
+    }
+
     public bool TryCreateGame(PlayerModel host, out ServerModel? server, out GameModel? game)
     {
         server = null;
@@ -34,14 +50,15 @@ public class ServersService
         }
     }
 
-    public bool TryJoinGame(PlayerModel player, string joinCode, out GameModel? game)
+    public bool TryJoinGame(PlayerModel player, string joinCode, out ServerModel? server, out GameModel? game)
     {
+        server = null;
         game = null;
         lock (serversLock)
         {
             if (player.IsInGame())
                 return false;
-            ServerModel? server = servers.Find(s => s.ServerId == player.serverIntent);
+            server = servers.Find(s => s.ServerId == player.serverIntent);
             if (server is null)
                 return false;
             if (!server.TryGetGame(joinCode, out game))

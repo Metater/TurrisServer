@@ -5,6 +5,16 @@ public record ServerModel(string ServerId, string Endpoint)
     private readonly List<GameModel> unpolledGames = new();
     private readonly List<GameModel> games = new();
 
+    public void Start()
+    {
+        // for the future if anything needs to be done manager side when a server is started
+    }
+
+    public void Stop()
+    {
+        // for the future if anything needs to be done manager side when a server is stopped
+    }
+
     public GameModel CreateGame(PlayerModel host, string joinCode)
     {
         GameModel game = new(host, joinCode);

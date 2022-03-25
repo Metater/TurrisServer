@@ -20,18 +20,18 @@ public static class TurrisUtils
             Regex.IsMatch(username, @"^[a-zA-Z0-9_]+$");
     }
 
-    public static bool GameCodeValid(string gameCode)
+    public static bool JoinCodeValid(string joinCode)
     {
-        return gameCode.Length >= 1 && gameCode.Length <= 64;
+        return joinCode.Length == 4;
     }
 
-    public static bool AuthTokenValid(string gameCode)
+    public static bool GuidLengthValid(string gameCode)
     {
-        return gameCode.Length >= 1 && gameCode.Length <= 64;
+        return gameCode.Length == 36;
     }
 
-    public static bool JoinCodeValid(string gameCode)
+    public static bool EndpointLengthValid(string endpoint)
     {
-        return gameCode.Length == 4;
+        return endpoint.Length >= 1 && endpoint.Length <= 128;
     }
 }
